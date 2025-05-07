@@ -19,7 +19,13 @@ func main() {
 
   r := gin.Default()
 
-  r.GET("/api/metrics", metrics.Handler(db, 60))
+  // Only trust the loopback interface
+if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
+  panic(err)
+}
+
+
+  r.GET("/metrics", metrics.Handler(db, 60))
 
   r.Static("/static", "./static")
 

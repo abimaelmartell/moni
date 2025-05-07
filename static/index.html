@@ -1,6 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Moni</title>
+  <meta charset="UTF-8" />
+  <title>System Monitor</title>
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-2xl p-6 bg-white rounded shadow">
+    <h2 class="text-2xl font-bold mb-4">CPU Usage (last 60s)</h2>
+    <canvas id="cpuChart" width="600" height="200"></canvas>
+
+    <h2 class="text-2xl font-bold mb-4 mt-4">Memory Usage (last 60s)</h2>
+    <canvas id="memChart" width="600" height="200"></canvas>
+
+    <h2 class="text-2xl font-bold mb-4 mt-4">Load Average (last 60s)</h2>
+    <canvas id="loadChart" width="600" height="200"></canvas>
+
+    <h2 class="text-2xl font-bold mb-4 mt-4">Top Processes (last 60s)</h2>
+
+    <div id="topProcesses" class="mt-4">
+      <table class="w-full border-collapse border border-gray-300">
+        <thead>
+          <tr>
+            <th class="border border-gray-300 p-2">PID</th>
+            <th class="border border-gray-300 p-2">CPU</th>
+            <th class="border border-gray-300 p-2">Memory</th>
+            <th class="border border-gray-300 p-2">Command</th>
+          </tr>
+        </thead>
+        <tbody id="topProcessesBody">
+          <!-- Process rows will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="static/js/main.js"></script>
+</body>
+</html>

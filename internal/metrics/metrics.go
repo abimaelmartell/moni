@@ -9,12 +9,21 @@ import (
 )
 
 type DataPoint struct {
-	Timestamp  int64   `json:"timestamp"`
-	CPUPercent float64 `json:"cpu_percent"`
-	MemTotal   uint64  `json:"mem_total"`
-	MemUsed    uint64  `json:"mem_used"`
-	DiskTotal  uint64  `json:"disk_total"`
-	DiskUsed   uint64  `json:"disk_used"`
+	Timestamp    int64   `json:"timestamp"`
+	CPUPercent   float64 `json:"cpu_percent"`
+	MemTotal     uint64  `json:"mem_total"`
+	MemUsed      uint64  `json:"mem_used"`
+	DiskTotal    uint64  `json:"disk_total"`
+	DiskUsed     uint64  `json:"disk_used"`
+	LoadAvg      float64 `json:"load_avg"`
+	MemPercent   float64 `json:"mem_percent"`
+	DiskPercent  float64 `json:"disk_percent"`
+	TopProcesses []struct {
+		PID     int     `json:"pid"`
+		CPU     float64 `json:"cpu"`
+		Memory  uint64  `json:"memory"`
+		Command string  `json:"command"`
+	} `json:"top_processes"`
 }
 
 func Handler(db *bbolt.DB, limit int) gin.HandlerFunc {
