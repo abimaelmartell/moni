@@ -1,41 +1,35 @@
 package main
 
 import (
-  "fmt"
-  "log"
-  "time"
+	"fmt"
+	"log"
+	"time"
 
-  "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 
-  "github.com/abimaelmartell/moni/internal/collector"
-  "github.com/abimaelmartell/moni/internal/metrics"
+	"github.com/abimaelmartell/moni/internal/collector"
+	"github.com/abimaelmartell/moni/internal/metrics"
 )
 
 func main() {
-  db := collector.OpenBolt("./metrics.db")
-  defer db.Close()
+	db := collector.OpenBolt("./metrics.db")
+	defer db.Close()
 
-  go collector.Run(db, time.Second)
+	go collector.Run(db, time.Second)
 
-  r := gin.Default()
+	r := gin.Default()
 
-  // Only trust the loopback interface
-if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
-  panic(err)
-}
+	r.GET("/metrics", metrics.Handler(db, 60))
 
+	r.Static("/static", "./static")
 
-  r.GET("/metrics", metrics.Handler(db, 60))
+	r.GET("/", func(c *gin.Context) {
+		c.File("./static/index.html")
+	})
 
-  r.Static("/static", "./static")
+	fmt.Println("Starting server on :8080")
 
-  r.GET("/", func(c *gin.Context) {
-    c.File("./static/index.html")
-  })
-
-  fmt.Println("Starting server on :8080")
-
-  if err := r.Run(":8080"); err != nil {
-    log.Fatalf("server error: %v", err)
-  }
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("server error: %v", err)
+	}
 }
