@@ -2,42 +2,133 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>System Monitor</title>
-  <!-- Tailwind via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js via CDN -->
+  <title>moni – System Monitor</title>
+  <!-- Prebuilt Tailwind CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    rel="stylesheet"
+  />
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-  <div class="w-full max-w-2xl p-6 bg-white rounded shadow">
-    <h2 class="text-2xl font-bold mb-4">CPU Usage (last 60s)</h2>
-    <canvas id="cpuChart" width="600" height="200"></canvas>
+<body class="bg-gray-100 min-h-screen flex items-start justify-center">
+  <div class="w-full max-w-4xl space-y-6 p-4">
+    <header class="flex items-center justify-between">
+      <h1 class="text-3xl font-bold text-gray-800">moni <span class="text-sm text-gray-500" id="hostname"></span>
+        <button id="openInfo" class="px-4 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 focus:outline-none">
+          about
+        </button>
+        </h1>
 
-    <h2 class="text-2xl font-bold mb-4 mt-4">Memory Usage (last 60s)</h2>
-    <canvas id="memChart" width="600" height="200"></canvas>
+      <span class="text-sm text-gray-500">Updated every 1s</span>
+    </header>
 
-    <h2 class="text-2xl font-bold mb-4 mt-4">Load Average (last 60s)</h2>
-    <canvas id="loadChart" width="600" height="200"></canvas>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white p-4 rounded shadow flex flex-col">
+        <span class="text-sm text-gray-500">CPU</span>
+        <span id="cpuVal" class="mt-1 text-2xl font-semibold">0%</span>
+      </div>
+      <div class="bg-white p-4 rounded shadow flex flex-col">
+        <span class="text-sm text-gray-500">Memory</span>
+        <span id="memVal" class="mt-1 text-2xl font-semibold">0%</span>
+      </div>
+      <div class="bg-white p-4 rounded shadow flex flex-col">
+        <span class="text-sm text-gray-500">Load (1m/5m/15m)</span>
+        <span id="loadVal" class="mt-1 text-lg font-medium">0 / 0 / 0</span>
+      </div>
+      <div class="bg-white p-4 rounded shadow flex flex-col">
+        <span class="text-sm text-gray-500">Disk</span>
+        <span id="diskVal" class="mt-1 text-2xl font-semibold">0%</span>
+      </div>
+    </div>
+    
 
-    <h2 class="text-2xl font-bold mb-4 mt-4">Top Processes (last 60s)</h2>
+    <div class="bg-white rounded shadow divide-y divide-gray-200">
 
-    <div id="topProcesses" class="mt-4">
-      <table class="w-full border-collapse border border-gray-300">
-        <thead>
-          <tr>
-            <th class="border border-gray-300 p-2">PID</th>
-            <th class="border border-gray-300 p-2">CPU</th>
-            <th class="border border-gray-300 p-2">Memory</th>
-            <th class="border border-gray-300 p-2">Command</th>
-          </tr>
-        </thead>
-        <tbody id="topProcessesBody">
-          <!-- Process rows will be inserted here -->
-        </tbody>
-      </table>
+      <div class="p-6">
+        <h2 class="text-2xl font-bold mb-4">CPU Usage (last 60s)</h2>
+        <canvas id="cpuChart" class="w-full h-64">></canvas>
+      </div>
+
+      <div class="p-6">
+        <h2 class="text-2xl font-bold mb-4">Memory Usage (last 60s)</h2>
+        <canvas id="memChart" class="w-full h-64"></canvas>
+      </div>
+
+      <div class="p-6">
+        <h2 class="text-2xl font-bold mb-4">Load Average (last 60s)</h2>
+        <canvas id="loadChart" class="w-full h-64"></canvas>
+      </div>
+
+      <div class="p-6">
+        <h2 class="text-2xl font-bold mb-4">Top Processes (by CPU)</h2>
+        <div class="">
+          <table class="w-full border-collapse border border-gray-300">
+            <thead class="bg-white sticky top-0">
+              <tr>
+                <th class="border border-gray-300 p-2 w-24">PID</th>
+                <th class="border border-gray-300 p-2 w-24">CPU</th>
+                <th class="border border-gray-300 p-2 w-24">Memory</th>
+                <th class="border border-gray-300 p-2">Command</th>
+              </tr>
+            </thead>
+            <tbody id="topProcessesBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
+
+
+<!-- Modal backdrop (hidden by default) -->
+<div id="infoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+  <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-md p-6 relative">
+    <!-- Close button -->
+    <button id="closeInfo" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+      &times;
+    </button>
+
+    <h3 class="text-xl font-bold mb-4">System Information</h3>
+    <ul class="space-y-2 text-gray-700">
+      <li>
+        <span class="font-semibold">Hostname:</span>
+        <span id="hostname_info"></span>
+      </li>
+      <li>
+        <span class="font-semibold">Operating System:</span>
+        <span id="os"></span>
+      </li>
+      <li>
+        <span class="font-semibold">Architecture:</span>
+        <span id="arch"></span>
+      </li>
+      <li>
+        <span class="font-semibold">Uptime:</span>
+        <span id="uptime"></span>
+      </li>
+      <li>
+        <span class="font-semibold">Primary IP:</span>
+        <span id="ip"></span>
+      </li>
+      <li>
+        <span class="font-semibold">Network Interface:</span>
+        <span id="networkInterface"></span>
+      </li>
+      <li>
+        <span class="font-semibold">Disk:</span>
+        <span id="disk"></span>
+      </li>
+      <li>
+        <span class="font-semibold">Memory:</span>
+        <span id="memory"></span>
+      </li>
+    </ul>
+  </div>
+</div>
+
 
   <script src="static/js/main.js"></script>
 </body>

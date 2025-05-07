@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         new Date(p.timestamp * 1000).toLocaleTimeString()
       )
       load_chart.data.datasets[0].data = points.map(p =>
-        p.load_avg
+        p.load_avg.load1
       )
 
 
@@ -101,15 +101,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const topProcessesBody = document.getElementById('topProcessesBody')
       topProcessesBody.innerHTML = ''
 
-      const lastPoint = points[points.length - 1]
+      const last = points[points.length - 1]
 
-      lastPoint.top_processes.forEach(p => {
+      document.getElementById('cpuVal').textContent = `${last.cpu_percent.toFixed(1)}%`
+      document.getElementById('memVal').textContent = `${((last.mem_used / last.mem_total) * 100).toFixed(1)}%`
+      document.getElementById('loadVal').textContent =
+        `${last.load_avg.load1.toFixed(1)} / ${last.load_avg.load5.toFixed(1)} / ${last.load_avg.load15.toFixed(1)}`
+      document.getElementById('diskVal').textContent =
+        `${((last.disk_used / last.disk_total) * 100).toFixed(1)}%`
+
+
+      last.top_processes.forEach(p => {
         const row = document.createElement('tr')
-        const memoryMB = p.memory / 1024 / 1024
+        const memoryMB = parseInt(p.memory / 1024 / 1024)
         row.innerHTML = `
-            <td class="border border-gray-300 p-2">${p.pid}</td>
-            <td class="border border-gray-300 p-2">${p.cpu.toFixed(2)}%</td>
-            <td class="border border-gray-300 p-2">${memoryMB.toFixed(2)}MB</td>
+            <td class="border border-gray-300 p-2 text-right">${p.pid}</td>
+            <td class="border border-gray-300 p-2 text-right">${p.cpu.toFixed(2)}%</td>
+            <td class="border border-gray-300 p-2 text-right">${memoryMB} MB</td>
             <td class="border border-gray-300 p-2">${p.command}</td>
           `
         topProcessesBody.appendChild(row)
@@ -119,6 +127,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  async function fetchAndUpdateInfo() {
+    try {
+      const res = await fetch('/info')
+      if (!res.ok) throw new Error(res.status)
+      const info = await res.json()
+
+      document.getElementById('hostname').textContent = info.hostname
+      document.getElementById('hostname_info').textContent = info.hostname
+      document.getElementById('ip').textContent = info.ip
+      document.getElementById('uptime').textContent = info.uptime
+      document.getElementById('os').textContent = info.os
+      document.getElementById('arch').textContent = info.arch
+      document.getElementById('memory').textContent = info.memory
+      document.getElementById('disk').textContent = info.disk
+    } catch (e) {
+      console.error('update info error', e)
+    }
+  }
+
   fetchAndUpdate()
+  fetchAndUpdateInfo()
   setInterval(fetchAndUpdate, 1000)
 })
+
+document.getElementById('openInfo').onclick = () => {
+  document.getElementById('infoModal').classList.remove('hidden')
+}
+document.getElementById('closeInfo').onclick = () => {
+  document.getElementById('infoModal').classList.add('hidden')
+}

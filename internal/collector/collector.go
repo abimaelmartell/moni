@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"log"
+	"os"
 	"sort"
 	"time"
 
@@ -69,18 +70,24 @@ func Run(db *bbolt.DB, interval time.Duration) {
 		sort.Slice(topProcesses, func(i, j int) bool {
 			cpu1, err := topProcesses[i].CPUPercent()
 			if err != nil {
-				log.Printf("warning: failed to get CPU percent for process %d: %v", topProcesses[i].Pid, err)
+				// log.Printf("warning: failed to get CPU percent for process %d: %v", topProcesses[i].Pid, err)
 				return false
 			}
 			cpu2, err := topProcesses[j].CPUPercent()
 			if err != nil {
-				log.Printf("warning: failed to get CPU percent for process %d: %v", topProcesses[j].Pid, err)
+				// log.Printf("warning: failed to get CPU percent for process %d: %v", topProcesses[j].Pid, err)
 				return false
 			}
 			return cpu1 > cpu2
 		})
 
 		topProcesses = topProcesses[:10]
+
+		hostname, err := os.Hostname()
+		if err != nil {
+			log.Printf("warning: failed to get hostname: %v", err)
+			continue
+		}
 
 		topProcessesJSON := make([]struct {
 			PID     int     `json:"pid"`
@@ -92,17 +99,17 @@ func Run(db *bbolt.DB, interval time.Duration) {
 		for i, p := range topProcesses {
 			cpuPercent, err := p.CPUPercent()
 			if err != nil {
-				log.Printf("warning: failed to get CPU percent for process %d: %v", p.Pid, err)
+				// log.Printf("warning: failed to get CPU percent for process %d: %v", p.Pid, err)
 				continue
 			}
 			memoryInfo, err := p.MemoryInfo()
 			if err != nil {
-				log.Printf("warning: failed to get memory info for process %d: %v", p.Pid, err)
+				// log.Printf("warning: failed to get memory info for process %d: %v", p.Pid, err)
 				continue
 			}
 			name, err := p.Name()
 			if err != nil {
-				log.Printf("warning: failed to get CPU percent for process %d: %v", p.Pid, err)
+				// log.Printf("warning: failed to get CPU percent for process %d: %v", p.Pid, err)
 				continue
 			}
 			topProcessesJSON[i] = struct {
@@ -119,15 +126,20 @@ func Run(db *bbolt.DB, interval time.Duration) {
 		}
 
 		record, err := json.Marshal(struct {
-			Timestamp    int64   `json:"timestamp"`
-			CPUPercent   float64 `json:"cpu_percent"`
-			MemTotal     uint64  `json:"mem_total"`
-			MemUsed      uint64  `json:"mem_used"`
-			MemPercent   float64 `json:"mem_percent"`
-			DiskTotal    uint64  `json:"disk_total"`
-			DiskUsed     uint64  `json:"disk_used"`
-			DiskPercent  float64 `json:"disk_percent"`
-			LoadAvg      float64 `json:"load_avg"`
+			Hostname    string  `json:"hostname"`
+			Timestamp   int64   `json:"timestamp"`
+			CPUPercent  float64 `json:"cpu_percent"`
+			MemTotal    uint64  `json:"mem_total"`
+			MemUsed     uint64  `json:"mem_used"`
+			MemPercent  float64 `json:"mem_percent"`
+			DiskTotal   uint64  `json:"disk_total"`
+			DiskUsed    uint64  `json:"disk_used"`
+			DiskPercent float64 `json:"disk_percent"`
+			LoadAvg     struct {
+				Load1  float64 `json:"load1"`
+				Load5  float64 `json:"load5"`
+				Load15 float64 `json:"load15"`
+			} `json:"load_avg"`
 			TopProcesses []struct {
 				PID     int     `json:"pid"`
 				CPU     float64 `json:"cpu"`
@@ -135,13 +147,22 @@ func Run(db *bbolt.DB, interval time.Duration) {
 				Command string  `json:"command"`
 			} `json:"top_processes"`
 		}{
-			Timestamp:    now.Unix(),
-			CPUPercent:   cpuPercents[0],
-			MemTotal:     vmStat.Total,
-			MemUsed:      vmStat.Used,
-			DiskTotal:    diskStat.Total,
-			DiskUsed:     diskStat.Used,
-			LoadAvg:      loadAvg.Load1,
+			Hostname:   hostname,
+			Timestamp:  now.Unix(),
+			CPUPercent: cpuPercents[0],
+			MemTotal:   vmStat.Total,
+			MemUsed:    vmStat.Used,
+			DiskTotal:  diskStat.Total,
+			DiskUsed:   diskStat.Used,
+			LoadAvg: struct {
+				Load1  float64 `json:"load1"`
+				Load5  float64 `json:"load5"`
+				Load15 float64 `json:"load15"`
+			}{
+				Load1:  loadAvg.Load1,
+				Load5:  loadAvg.Load5,
+				Load15: loadAvg.Load15,
+			},
 			MemPercent:   vmStat.UsedPercent,
 			DiskPercent:  diskStat.UsedPercent,
 			TopProcesses: topProcessesJSON,

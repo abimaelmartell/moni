@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/abimaelmartell/moni/internal/collector"
+	"github.com/abimaelmartell/moni/internal/info"
 	"github.com/abimaelmartell/moni/internal/metrics"
 )
 
@@ -20,6 +21,7 @@ func main() {
 	r := gin.Default()
 
 	r.GET("/metrics", metrics.Handler(db, 60))
+	r.GET("/info", info.Handler())
 
 	r.Static("/static", "./static")
 
