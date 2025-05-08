@@ -21,7 +21,7 @@
         </button>
         </h1>
 
-      <span class="text-sm text-gray-500">Updated every 1s</span>
+      <span class="text-sm text-gray-500">Updated every <span id="updateInterval">1s</span></span>
     </header>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -62,8 +62,19 @@
       </div>
 
       <div class="p-6">
-        <h2 class="text-2xl font-bold mb-4">Top Processes (by CPU)</h2>
-        <div class="">
+        <div class="space-y-4">
+          <div class="flex justify-between mb-2">
+            <h2 class="text-2xl font-bold">Top Processes</h2>
+
+            <label class="flex items-center text-gray-600">
+              <span class="mr-2 text-sm">Sort by:</span>
+              <select id="sortSelect" class="border rounded px-2 py-1 text-sm">
+                <option value="cpu" selected>CPU</option>
+                <option value="memory">Memory</option>
+              </select>
+            </label>
+          </div>
+          
           <table class="w-full border-collapse border border-gray-300">
             <thead class="bg-white sticky top-0">
               <tr>
@@ -102,10 +113,6 @@
         <span id="os"></span>
       </li>
       <li>
-        <span class="font-semibold">Architecture:</span>
-        <span id="arch"></span>
-      </li>
-      <li>
         <span class="font-semibold">Uptime:</span>
         <span id="uptime"></span>
       </li>
@@ -114,8 +121,12 @@
         <span id="ip"></span>
       </li>
       <li>
+        <span class="font-semibold">CPU:</span>
+        <span id="cpu"></span>
+      </li>
+      <li>
         <span class="font-semibold">Network Interface:</span>
-        <span id="networkInterface"></span>
+        <span id="interface"></span>
       </li>
       <li>
         <span class="font-semibold">Disk:</span>

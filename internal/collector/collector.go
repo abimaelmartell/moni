@@ -174,8 +174,29 @@ func Run(db *bbolt.DB, interval time.Duration) {
 
 		err = db.Update(func(tx *bbolt.Tx) error {
 			b := tx.Bucket([]byte("Metrics"))
-			return b.Put(itob(now.Unix()), record)
+
+			key := itob(now.Unix())
+			if err := b.Put(key, record); err != nil {
+				return err
+			}
+
+			stats := b.Stats()
+			if stats.KeyN > 100 {
+				toRemove := stats.KeyN - 100
+
+				c := b.Cursor()
+				k, _ := c.First()
+				for i := 0; i < toRemove && k != nil; i++ {
+					if err := c.Delete(); err != nil {
+						return err
+					}
+					k, _ = c.Next()
+				}
+			}
+
+			return nil
 		})
+
 		if err != nil {
 			log.Printf("warning: failed to write record to db: %v", err)
 		}

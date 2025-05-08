@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,15 +14,34 @@ import (
 )
 
 func main() {
-	db := collector.OpenBolt("./metrics.db")
+	metrics_path := os.Getenv("MONI_METRICS_PATH")
+
+	if metrics_path == "" {
+		metrics_path = "./metrics.db"
+	}
+
+	fmt.Println("metrics_path", metrics_path)
+
+	update_interval := os.Getenv("MONI_UPDATE_INTERVAL")
+
+	if update_interval == "" {
+		update_interval = "1s"
+	}
+
+	interval, err := time.ParseDuration(update_interval)
+	if err != nil {
+		log.Fatalf("invalid update interval: %v", err)
+	}
+
+	db := collector.OpenBolt(metrics_path)
 	defer db.Close()
 
-	go collector.Run(db, time.Second)
+	go collector.Run(db, interval)
 
 	r := gin.Default()
 
-	r.GET("/metrics", metrics.Handler(db, 60))
-	r.GET("/info", info.Handler())
+	r.GET("/metrics", metrics.Handler(db, int(interval.Milliseconds())))
+	r.GET("/info", info.Handler(int(interval.Milliseconds())))
 
 	r.Static("/static", "./static")
 

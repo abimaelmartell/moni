@@ -1,3 +1,18 @@
+let defaultUpdateInterval = 1000
+let sortBy = 'cpu'
+
+document.getElementById('openInfo').onclick = () => {
+  document.getElementById('infoModal').classList.remove('hidden')
+}
+
+document.getElementById('closeInfo').onclick = () => {
+  document.getElementById('infoModal').classList.add('hidden')
+}
+
+document.getElementById('sortSelect').addEventListener('change', e => {
+  sortBy = e.target.value
+})
+
 document.addEventListener('DOMContentLoaded', () => {
   const cpu_ctx = document
     .getElementById('cpuChart')
@@ -67,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchAndUpdate() {
     try {
-      const res = await fetch('/metrics')
+      const res = await fetch('/metrics?sortProcessesBy=' + sortBy)
       if (!res.ok) throw new Error(res.status)
       const points = await res.json()
       if (!Array.isArray(points) || !points.length) return
@@ -113,6 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       last.top_processes.forEach(p => {
         const row = document.createElement('tr')
+
+        row.classList.add('hover:bg-gray-100')
+
         const memoryMB = parseInt(p.memory / 1024 / 1024)
         row.innerHTML = `
             <td class="border border-gray-300 p-2 text-right">${p.pid}</td>
@@ -137,10 +155,15 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('hostname_info').textContent = info.hostname
       document.getElementById('ip').textContent = info.ip
       document.getElementById('uptime').textContent = info.uptime
-      document.getElementById('os').textContent = info.os
-      document.getElementById('arch').textContent = info.arch
+      document.getElementById('os').textContent = info.os + ' ' + info.platform + ' ' + info.platform_version + ' ' + info.kernel_version
+      document.getElementById('cpu').textContent = info.cpu_model + ' (' + info.cpu_cores + ' cores)'
       document.getElementById('memory').textContent = info.memory
       document.getElementById('disk').textContent = info.disk
+
+      updateInterval = info.update_interval
+
+      document.getElementById('updateInterval').textContent = `${updateInterval / 1000}s`
+      document.getElementById('interface').textContent = info.interface
     } catch (e) {
       console.error('update info error', e)
     }
@@ -148,12 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   fetchAndUpdate()
   fetchAndUpdateInfo()
-  setInterval(fetchAndUpdate, 1000)
+
+  setInterval(fetchAndUpdate, updateInterval)
 })
 
-document.getElementById('openInfo').onclick = () => {
-  document.getElementById('infoModal').classList.remove('hidden')
-}
-document.getElementById('closeInfo').onclick = () => {
-  document.getElementById('infoModal').classList.add('hidden')
-}
+
