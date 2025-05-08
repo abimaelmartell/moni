@@ -1,9 +1,7 @@
 # Makefile – Download Tailwind CLI and build minimal CSS via stdin
 
-# Tailwind CLI version
 TAILWIND_VERSION := 3.3.4
 
-# Detect OS and ARCH for the correct binary
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
@@ -24,10 +22,8 @@ endif
 TAILWIND_CLI := bin/tailwindcss
 TAILWIND_URL := https://github.com/tailwindlabs/tailwindcss/releases/download/v$(TAILWIND_VERSION)/tailwindcss-$(PLATFORM)
 
-# adjust this to wherever you want your CSS
 OUTPUT_CSS   := static/assets/tailwind.min.css
 
-# Files to scan for class usage
 CONTENT := "./static/index.html,./static/assets/main.js"
 
 .PHONY: all build cli clean

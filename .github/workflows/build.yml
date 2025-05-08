@@ -23,3 +23,6 @@ jobs:
 
     - name: Build
       run: CGO_ENABLED=0 go build -o moni cmd/moni/main.go
+
+    - name: Build Tailwind CSS
+      run: make
