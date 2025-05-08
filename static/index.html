@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <title>moni – System Monitor</title>
-  <!-- Prebuilt Tailwind CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
     rel="stylesheet"
   />
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -75,7 +73,7 @@
             </label>
           </div>
           
-          <table class="w-full border-collapse border border-gray-300">
+          <table class="w-full border-collapse border border-gray-300" id="topProcessesTable">
             <thead class="bg-white sticky top-0">
               <tr>
                 <th class="border border-gray-300 p-2 w-24">PID</th>
@@ -84,9 +82,80 @@
                 <th class="border border-gray-300 p-2">Command</th>
               </tr>
             </thead>
-            <tbody id="topProcessesBody">
+          
+            <tbody id="topProcessesLoading">
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+              <tr class="animate-pulse">
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
+                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
+              </tr>
+            </tbody>
+          
+            <tbody id="topProcessesBody" class="hidden">
             </tbody>
           </table>
+          
         </div>
       </div>
 

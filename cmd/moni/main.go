@@ -40,7 +40,7 @@ func main() {
 
 	r := gin.Default()
 
-	r.GET("/metrics", metrics.Handler(db, int(interval.Milliseconds())))
+	r.GET("/metrics", metrics.Handler(db, int(interval.Milliseconds()), 10))
 	r.GET("/info", info.Handler(int(interval.Milliseconds())))
 
 	r.Static("/static", "./static")
