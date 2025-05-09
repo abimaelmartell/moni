@@ -21,8 +21,5 @@ jobs:
       with:
         go-version: '1.24.3'
 
-    - name: Build
-      run: CGO_ENABLED=0 go build -o moni cmd/moni/main.go
-
-    - name: Build Tailwind CSS
+    - name: Build Styles and Binary
       run: make

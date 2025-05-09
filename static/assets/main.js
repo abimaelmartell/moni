@@ -16,12 +16,67 @@ const fixTableHeaders = () => {
   }
 }
 
+const infoModal = document.getElementById('infoModal')
+
+const openInfoModal = () => {
+  infoModal.classList.remove('hidden')
+
+  requestAnimationFrame(() => {
+    infoModal.classList.remove('opacity-0')
+    infoModal.classList.add('opacity-100')
+  })
+}
+
+const closeInfoModal = () => {
+  infoModal.classList.remove('opacity-100')
+  infoModal.classList.add('opacity-0')
+
+  infoModal.addEventListener('transitionend', function listener() {
+    infoModal.classList.add('hidden')
+    infoModal.removeEventListener('transitionend', listener)
+  })
+}
+
 document.getElementById('openInfo').onclick = () => {
-  document.getElementById('infoModal').classList.remove('hidden')
+  openInfoModal()
 }
 
 document.getElementById('closeInfo').onclick = () => {
-  document.getElementById('infoModal').classList.add('hidden')
+  closeInfoModal()
+}
+
+document.getElementById('infoModal').onclick = (e) => {
+  if (e.target === document.getElementById('infoModal')) {
+    closeInfoModal()
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeInfoModal()
+  }
+})
+
+const formatBytes = (bytes) => {
+  const fmt = (num, dec = 2) =>
+    num.toLocaleString(undefined, {
+      minimumFractionDigits: dec,
+      maximumFractionDigits: dec,
+    });
+
+  if (bytes < 1024) {
+    return bytes.toLocaleString() + ' B'
+  }
+
+  if (bytes < 1024 ** 2) {
+    return fmt(bytes / 1024) + ' KB'
+  }
+
+  if (bytes < 1024 ** 3) {
+    return fmt(bytes / 1024 ** 2) + ' MB'
+  }
+
+  return fmt(bytes / 1024 ** 3) + ' GB'
 }
 
 document.getElementById('sortSelect').addEventListener('change', e => {
@@ -132,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
         p.load_avg.load1
       )
 
-
       cpu_chart.update()
       mem_chart.update()
       load_chart.update()
@@ -144,11 +198,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       document.getElementById('cpuVal').textContent = `${last.cpu_percent.toFixed(1)}%`
       document.getElementById('memVal').textContent = `${((last.mem_used / last.mem_total) * 100).toFixed(1)}%`
+
+      const memUsedBytes = formatBytes(last.mem_used)
+      const memTotalBytes = formatBytes(last.mem_total)
+      const diskUsedBytes = formatBytes(last.disk_used)
+      const diskTotalBytes = formatBytes(last.disk_total)
+
+      document.getElementById('memDetail').textContent =
+        `${memUsedBytes} used of ${memTotalBytes}`
+
+      document.getElementById('diskDetail').textContent =
+        `${diskUsedBytes} used of ${diskTotalBytes}`
+
       document.getElementById('loadVal').textContent =
         `${last.load_avg.load1.toFixed(1)} / ${last.load_avg.load5.toFixed(1)} / ${last.load_avg.load15.toFixed(1)}`
+
       document.getElementById('diskVal').textContent =
         `${((last.disk_used / last.disk_total) * 100).toFixed(1)}%`
-
 
       data.top_processes.forEach(p => {
         const row = document.createElement('tr')
@@ -156,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const memoryMB = (p.memory / 1024 / 1024).toFixed(0)
 
-        // build the CPU and Memory cells in the desired order
         let metricCells
 
         if (sortBy === 'memory') {
@@ -201,8 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('uptime').textContent = info.uptime
       document.getElementById('os').textContent = info.os + ' ' + info.platform + ' ' + info.platform_version + ' ' + info.kernel_version
       document.getElementById('cpu').textContent = info.cpu_model + ' (' + info.cpu_cores + ' cores)'
-      document.getElementById('memory').textContent = info.memory
-      document.getElementById('disk').textContent = info.disk
+      document.getElementById('memory').textContent = formatBytes(info.used_memory) + ' / ' + formatBytes(info.total_memory)
+      document.getElementById('disk').textContent = formatBytes(info.used_disk) + ' / ' + formatBytes(info.total_disk)
 
       updateIntervalMs = info.update_interval
 
@@ -220,5 +285,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   fixTableHeaders()
 })
-
-

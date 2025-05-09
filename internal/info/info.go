@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,20 +20,23 @@ type Info struct {
 	Interface string `json:"interface"`
 	IP        string `json:"ip"`
 
-	OS              string `json:"os"`               // e.g. "linux"
-	Platform        string `json:"platform"`         // e.g. "ubuntu"
-	PlatformVersion string `json:"platform_version"` // e.g. "22.04"
-	KernelVersion   string `json:"kernel_version"`   // e.g. "5.15.0-46-generic"
+	OS              string `json:"os"`
+	Platform        string `json:"platform"`
+	PlatformVersion string `json:"platform_version"`
+	KernelVersion   string `json:"kernel_version"`
 
-	Uptime   string `json:"uptime"`    // real system uptime
-	CPUModel string `json:"cpu_model"` // e.g. "Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz"
-	CPUCores int    `json:"cpu_cores"` // number of logical cores
+	Uptime   string `json:"uptime"`
+	CPUModel string `json:"cpu_model"`
+	CPUCores int    `json:"cpu_cores"`
 
-	Memory string `json:"memory"` // used / total
-	Swap   string `json:"swap"`   // used / total swap
-	Disk   string `json:"disk"`   // used / total on “/”
+	TotalMemory int `json:"total_memory"`
+	UsedMemory  int `json:"used_memory"`
+	TotalSwap   int `json:"total_swap"`
+	UsedSwap    int `json:"used_swap"`
+	TotalDisk   int `json:"total_disk"`
+	UsedDisk    int `json:"used_disk"`
 
-	UpdateInterval int `json:"update_interval"` // how often it refreshes
+	UpdateInterval int `json:"update_interval"`
 }
 
 func getPrimaryInterface() (string, string) {
@@ -63,27 +67,48 @@ func getPrimaryInterface() (string, string) {
 	return "unknown", "unknown"
 }
 
+func getFormattedUptime() (string, error) {
+	uSecs, err := host.Uptime()
+	if err != nil {
+		return "", err
+	}
+	upt := time.Duration(uSecs) * time.Second
+
+	days := upt / (24 * time.Hour)
+	hours := (upt % (24 * time.Hour)) / time.Hour
+	minutes := (upt % time.Hour) / time.Minute
+	seconds := (upt % time.Minute) / time.Second
+
+	parts := []string{}
+	if days > 0 {
+		parts = append(parts, fmt.Sprintf("%d days", days))
+	}
+	parts = append(parts, fmt.Sprintf("%d hours", hours))
+	parts = append(parts, fmt.Sprintf("%d minutes", minutes))
+	parts = append(parts, fmt.Sprintf("%d seconds", seconds))
+
+	formatted := strings.Join(parts, ", ")
+	return formatted, nil
+}
+
 func Handler(updateInterval int) gin.HandlerFunc {
-	// fetch host info once
 	hi, _ := host.Info()
 	ci, _ := cpu.Info()
 
-	// determine primary interface & IP …
 	ifaceName, ip := getPrimaryInterface()
 
 	return func(c *gin.Context) {
-		// 1) uptime
-		uSecs, _ := host.Uptime()
-		uptime := time.Duration(uSecs) * time.Second
+		uptime, err := getFormattedUptime()
 
-		// 2) CPU cores
+		if err != nil {
+			uptime = "unknown"
+		}
+
 		cores := runtime.NumCPU()
 
-		// 3) mem + swap
 		vm, _ := mem.VirtualMemory()
 		sm, _ := mem.SwapMemory()
 
-		// 4) disk
 		ds, _ := disk.Usage("/")
 
 		info := Info{
@@ -96,13 +121,16 @@ func Handler(updateInterval int) gin.HandlerFunc {
 			PlatformVersion: hi.PlatformVersion,
 			KernelVersion:   hi.KernelVersion,
 
-			Uptime:   uptime.Truncate(time.Second).String(),
+			Uptime:   uptime,
 			CPUModel: ci[0].ModelName,
 			CPUCores: cores,
 
-			Memory: fmt.Sprintf("%.1fGB/%.1fGB", float64(vm.Used)/(1<<30), float64(vm.Total)/(1<<30)),
-			Swap:   fmt.Sprintf("%.1fGB/%.1fGB", float64(sm.Used)/(1<<30), float64(sm.Total)/(1<<30)),
-			Disk:   fmt.Sprintf("%.1fGB/%.1fGB", float64(ds.Used)/(1<<30), float64(ds.Total)/(1<<30)),
+			TotalMemory: int(vm.Total),
+			UsedMemory:  int(vm.Used),
+			TotalSwap:   int(sm.Total),
+			UsedSwap:    int(sm.Used),
+			TotalDisk:   int(ds.Total),
+			UsedDisk:    int(ds.Used),
 
 			UpdateInterval: updateInterval,
 		}

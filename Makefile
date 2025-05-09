@@ -26,6 +26,8 @@ OUTPUT_CSS   := static/assets/tailwind.min.css
 
 CONTENT := "./static/index.html,./static/assets/main.js"
 
+OUTPUT_BIN := bin/moni
+
 .PHONY: all build cli clean
 
 all: build
@@ -48,7 +50,12 @@ $(OUTPUT_CSS): cli
 	    --output $@ \
 	    --minify
 
-build: $(OUTPUT_CSS)
+build: $(OUTPUT_CSS) $(OUTPUT_BIN)
+
+$(OUTPUT_BIN):
+	@echo "👉  Building moni → $@"
+	@mkdir -p $(dir $@)
+	@go build -o $@ ./cmd/moni
 
 clean:
 	@rm -f $(TAILWIND_CLI) $(OUTPUT_CSS)

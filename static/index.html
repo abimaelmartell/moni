@@ -1,215 +1,324 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>moni – System Monitor</title>
-  <link
-    href="static/assets/tailwind.min.css"
-    rel="stylesheet"
-  />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <title>moni – System Monitor</title>
 
-<body class="bg-gray-100 min-h-screen flex items-start justify-center">
-  <div class="w-full max-w-4xl space-y-6 p-4">
-    <header class="flex items-center justify-between">
-      <h1 class="text-3xl font-bold text-gray-800">moni <span class="text-sm text-gray-500" id="hostname"></span>
-        <button id="openInfo" class="px-4 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 focus:outline-none">
-          about
-        </button>
+    <link href="static/assets/tailwind.min.css" rel="stylesheet" />
+
+    <!-- for development -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.5"></script> -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+
+  <body class="bg-gray-100 min-h-screen flex items-start justify-center">
+    <div class="w-full max-w-4xl space-y-6 p-4">
+      <header class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
+          moni <span class="text-sm text-gray-500" id="hostname"></span>
+          <button
+            id="openInfo"
+            class="w-8 h-8 bg-blue-600 text-white text-xs rounded-full hover:bg-blue-700 focus:outline-none flex items-center justify-center"
+          >
+            ?
+          </button>
         </h1>
 
-      <span class="text-sm text-gray-500">Updated every <span id="updateInterval">1s</span></span>
-    </header>
+        <span class="text-sm text-gray-500"
+          >Updated every <span id="updateInterval">1s</span></span
+        >
+      </header>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white p-4 rounded shadow flex flex-col">
-        <span class="text-sm text-gray-500">CPU</span>
-        <span id="cpuVal" class="mt-1 text-2xl font-semibold">0%</span>
-      </div>
-      <div class="bg-white p-4 rounded shadow flex flex-col">
-        <span class="text-sm text-gray-500">Memory</span>
-        <span id="memVal" class="mt-1 text-2xl font-semibold">0%</span>
-      </div>
-      <div class="bg-white p-4 rounded shadow flex flex-col">
-        <span class="text-sm text-gray-500">Load (1m/5m/15m)</span>
-        <span id="loadVal" class="mt-1 text-lg font-medium">0 / 0 / 0</span>
-      </div>
-      <div class="bg-white p-4 rounded shadow flex flex-col">
-        <span class="text-sm text-gray-500">Disk</span>
-        <span id="diskVal" class="mt-1 text-2xl font-semibold">0%</span>
-      </div>
-    </div>
-    
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded shadow flex flex-col">
+          <span class="text-sm text-gray-500">CPU</span>
+          <span id="cpuVal" class="mt-1 text-4xl font-semibold text-center">0%</span>
+        </div>
 
-    <div class="bg-white rounded shadow divide-y divide-gray-200">
+        <div class="bg-white p-4 rounded shadow flex flex-col">
+          <span class="text-sm text-gray-500">Memory</span>
+          <span id="memVal" class="mt-1 text-4xl font-semibold text-center">0%</span>
+          <span id="memDetail" class="mt-1 text-xs text-gray-500">
+            — GB used of — GB
+          </span>
+        </div>
+        
+        <div class="bg-white p-4 rounded shadow flex flex-col">
+          <span class="text-sm text-gray-500">Disk</span>
+          <span id="diskVal" class="mt-1 text-4xl font-semibold text-center">0%</span>
+          <span id="diskDetail" class="mt-1 text-xs text-gray-500">
+            — GB used of — GB
+          </span>
+        </div>
 
-      <div class="p-6">
-        <h2 class="text-2xl font-bold mb-4">CPU Usage (last 60s)</h2>
-        <canvas id="cpuChart" class="w-full h-64">></canvas>
-      </div>
-
-      <div class="p-6">
-        <h2 class="text-2xl font-bold mb-4">Memory Usage (last 60s)</h2>
-        <canvas id="memChart" class="w-full h-64"></canvas>
-      </div>
-
-      <div class="p-6">
-        <h2 class="text-2xl font-bold mb-4">Load Average (last 60s)</h2>
-        <canvas id="loadChart" class="w-full h-64"></canvas>
-      </div>
-
-      <div class="p-6">
-        <div class="space-y-4">
-          <div class="flex justify-between mb-2">
-            <h2 class="text-2xl font-bold">Top Processes</h2>
-
-            <label class="flex items-center text-gray-600">
-              <span class="mr-2 text-sm">Sort by:</span>
-              <select id="sortSelect" class="border rounded px-2 py-1 text-sm">
-                <option value="cpu" selected>CPU</option>
-                <option value="memory">Memory</option>
-              </select>
-            </label>
-          </div>
-          
-          <table class="w-full border-collapse border border-gray-300" id="topProcessesTable">
-            <thead class="bg-white sticky top-0">
-              <tr>
-                <th class="border border-gray-300 p-2 w-24">PID</th>
-                <th class="border border-gray-300 p-2 w-24">CPU</th>
-                <th class="border border-gray-300 p-2 w-24">Memory</th>
-                <th class="border border-gray-300 p-2">Command</th>
-              </tr>
-            </thead>
-          
-            <tbody id="topProcessesLoading">
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-              <tr class="animate-pulse">
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div></td>
-                <td class="border border-gray-300 p-2"><div class="h-4 bg-gray-200 rounded mx-auto"></div></td>
-              </tr>
-            </tbody>
-          
-            <tbody id="topProcessesBody" class="hidden">
-            </tbody>
-          </table>
-          
+        <div class="bg-white p-4 rounded shadow flex flex-col">
+          <span class="text-sm text-gray-500">Load (1m/5m/15m)</span>
+          <span id="loadVal" class="mt-1 text-3xl font-semibold text-center">0 / 0 / 0</span>
         </div>
       </div>
 
+      <div class="bg-white rounded shadow divide-y divide-gray-200">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold mb-4">CPU Usage (last 60s)</h2>
+          <canvas id="cpuChart" class="w-full h-64">></canvas>
+        </div>
+
+        <div class="p-6">
+          <h2 class="text-2xl font-bold mb-4">Memory Usage (last 60s)</h2>
+          <canvas id="memChart" class="w-full h-64"></canvas>
+        </div>
+
+        <div class="p-6">
+          <h2 class="text-2xl font-bold mb-4">Load Average (last 60s)</h2>
+          <canvas id="loadChart" class="w-full h-64"></canvas>
+        </div>
+
+        <div class="p-6">
+          <div class="space-y-4">
+            <div class="flex justify-between mb-2">
+              <h2 class="text-2xl font-bold">Top Processes</h2>
+
+              <label class="flex items-center text-gray-600">
+                <span class="mr-2 text-sm">Sort by:</span>
+                <select
+                  id="sortSelect"
+                  class="border rounded px-2 py-1 text-sm"
+                >
+                  <option value="cpu" selected>CPU</option>
+                  <option value="memory">Memory</option>
+                </select>
+              </label>
+            </div>
+
+            <table
+              class="w-full border-collapse border border-gray-300"
+              id="topProcessesTable"
+            >
+              <thead class="bg-white sticky top-0">
+                <tr>
+                  <th class="border border-gray-300 p-2 w-24">PID</th>
+                  <th class="border border-gray-300 p-2 w-24">CPU</th>
+                  <th class="border border-gray-300 p-2 w-24">Memory</th>
+                  <th class="border border-gray-300 p-2">Command</th>
+                </tr>
+              </thead>
+
+              <tbody id="topProcessesLoading">
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+                <tr class="animate-pulse">
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td class="border border-gray-300 p-2">
+                    <div class="h-4 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+              </tbody>
+
+              <tbody id="topProcessesBody" class="hidden"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
 
+    <div
+      id="infoModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden
+      opacity-0 transition-opacity duration-100 ease-out"
+    >
+      <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-md p-6 relative">
+        <button
+          id="closeInfo"
+          class="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+        >
+          &times;
+        </button>
 
-<!-- Modal backdrop (hidden by default) -->
-<div id="infoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-  <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-md p-6 relative">
-    <!-- Close button -->
-    <button id="closeInfo" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
-      &times;
-    </button>
+        <h3 class="text-xl font-bold mb-4">System Information</h3>
+        <ul class="space-y-2 text-gray-700">
+          <li>
+            <span class="font-semibold">Hostname:</span>
+            <span id="hostname_info"></span>
+          </li>
+          <li>
+            <span class="font-semibold">Operating System:</span>
+            <span id="os"></span>
+          </li>
+          <li>
+            <span class="font-semibold">Uptime:</span>
+            <span id="uptime"></span>
+          </li>
+          <li>
+            <span class="font-semibold">Primary IP:</span>
+            <span id="ip"></span>
+          </li>
+          <li>
+            <span class="font-semibold">CPU:</span>
+            <span id="cpu"></span>
+          </li>
+          <li>
+            <span class="font-semibold">Network Interface:</span>
+            <span id="interface"></span>
+          </li>
+          <li>
+            <span class="font-semibold">Disk:</span>
+            <span id="disk"></span>
+          </li>
+          <li>
+            <span class="font-semibold">Memory:</span>
+            <span id="memory"></span>
+          </li>
+        </ul>
+      </div>
+    </div>
 
-    <h3 class="text-xl font-bold mb-4">System Information</h3>
-    <ul class="space-y-2 text-gray-700">
-      <li>
-        <span class="font-semibold">Hostname:</span>
-        <span id="hostname_info"></span>
-      </li>
-      <li>
-        <span class="font-semibold">Operating System:</span>
-        <span id="os"></span>
-      </li>
-      <li>
-        <span class="font-semibold">Uptime:</span>
-        <span id="uptime"></span>
-      </li>
-      <li>
-        <span class="font-semibold">Primary IP:</span>
-        <span id="ip"></span>
-      </li>
-      <li>
-        <span class="font-semibold">CPU:</span>
-        <span id="cpu"></span>
-      </li>
-      <li>
-        <span class="font-semibold">Network Interface:</span>
-        <span id="interface"></span>
-      </li>
-      <li>
-        <span class="font-semibold">Disk:</span>
-        <span id="disk"></span>
-      </li>
-      <li>
-        <span class="font-semibold">Memory:</span>
-        <span id="memory"></span>
-      </li>
-    </ul>
-  </div>
-</div>
-
-
-  <script src="static/assets/main.js"></script>
-</body>
+    <script src="static/assets/main.js"></script>
+  </body>
 </html>
