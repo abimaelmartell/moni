@@ -1,5 +1,3 @@
-# Makefile – Download Tailwind CLI and build minimal CSS via stdin
-
 TAILWIND_VERSION := 3.3.4
 
 UNAME_S := $(shell uname -s)
@@ -55,7 +53,36 @@ build: $(OUTPUT_CSS) $(OUTPUT_BIN)
 $(OUTPUT_BIN):
 	@echo "👉  Building moni → $@"
 	@mkdir -p $(dir $@)
-	@go build -o $@ ./cmd/moni
+	@go build -o $@ main.go
+
+# linux build
+
+OUTPUT_BIN_LINUX := $(OUTPUT_BIN)-linux
+
+$(OUTPUT_BIN_LINUX):
+	@echo "👉  Building moni for Linux → $(OUTPUT_BIN_LINUX)"
+	@mkdir -p $(dir $@)
+	@GOOS=linux GOARCH=amd64 go build -o $(OUTPUT_BIN_LINUX) main.go
+
+# darwin build
+
+OUTPUT_BIN_DARWIN := $(OUTPUT_BIN)-darwin
+
+$(OUTPUT_BIN_DARWIN):
+	@echo "👉  Building moni for Darwin → $(OUTPUT_BIN_DARWIN)"
+	@mkdir -p $(dir $@)
+	@GOOS=darwin GOARCH=amd64 go build -o $(OUTPUT_BIN_DARWIN) main.go
+
+# windows build
+
+OUTPUT_BIN_WINDOWS := $(OUTPUT_BIN)-windows.exe
+
+$(OUTPUT_BIN_WINDOWS):
+	@echo "👉  Building moni for Windows → $(OUTPUT_BIN_WINDOWS)"
+	@mkdir -p $(dir $@)
+	@GOOS=windows GOARCH=amd64 go build -o $(OUTPUT_BIN_WINDOWS) main.go
+
+release: $(OUTPUT_CSS) $(OUTPUT_BIN_LINUX) $(OUTPUT_BIN_DARWIN) $(OUTPUT_BIN_WINDOWS)
 
 clean:
-	@rm -f $(TAILWIND_CLI) $(OUTPUT_CSS)
+	@rm -f bin/*
