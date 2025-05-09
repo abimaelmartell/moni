@@ -79,6 +79,19 @@ const formatBytes = (bytes) => {
   return fmt(bytes / 1024 ** 3) + ' GB'
 }
 
+const formatOS = (os, platform, platform_version, kernel_version) => {
+  if (os === 'linux') {
+    const capitalizedPlatform = platform.charAt(0).toUpperCase() + platform.slice(1)
+    return capitalizedPlatform + ' ' + platform_version + ' (kernel ' + kernel_version + ')'
+  }
+
+  if (os === 'darwin') {
+    return 'MacOS' + ' ' + platform_version + '  (kernel ' + kernel_version + ')'
+  }
+
+  return os + ' ' + platform + ' ' + platform_version + ' ' + kernel_version
+}
+
 document.getElementById('sortSelect').addEventListener('change', e => {
   sortBy = e.target.value
   localStorage.setItem('sortBy', sortBy)
@@ -264,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('hostname_info').textContent = info.hostname
       document.getElementById('ip').textContent = info.ip
       document.getElementById('uptime').textContent = info.uptime
-      document.getElementById('os').textContent = info.os + ' ' + info.platform + ' ' + info.platform_version + ' ' + info.kernel_version
+      document.getElementById('os').textContent = formatOS(info.os, info.platform, info.platform_version, info.kernel_version)
       document.getElementById('cpu').textContent = info.cpu_model + ' (' + info.cpu_cores + ' cores)'
       document.getElementById('memory').textContent = formatBytes(info.used_memory) + ' / ' + formatBytes(info.total_memory)
       document.getElementById('disk').textContent = formatBytes(info.used_disk) + ' / ' + formatBytes(info.total_disk)
