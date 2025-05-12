@@ -4,6 +4,9 @@
 
 A single static binary that collects CPU, memory and disk usage samples, stores them in an embedded BoltDB, and serves both a JSON API and a plain-HTML/Chart.js dashboard—no build tools required.
 
+<img width="1436" alt="Screenshot of Web UI" src="https://github.com/user-attachments/assets/375adfee-1e27-40f2-a09d-165df7817f52" />
+
+
 ## 🚀 Quick Start
 
 
